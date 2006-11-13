@@ -8,7 +8,7 @@ env = Environment(
   CPPDEFINES = [ '_REENTRANT' ],
   CPPFLAGS = [ '-Wall', '-Werror', '-pipe' ],
   CXXFLAGS = [ '-fmessage-length=0', '-fvisibility-inlines-hidden', '-fvisibility=hidden' ],
-  LIBS = [ ],
+  LIBS = [],
   options = opts,
 )
 
