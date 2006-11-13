@@ -1,0 +1,81 @@
+
+Bus 002 Device 005: ID 041e:3100 Creative Technology, Ltd 
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               1.10
+  bDeviceClass            0 (Defined at Interface level)
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0         8
+  idVendor           0x041e Creative Technology, Ltd
+  idProduct          0x3100 
+  bcdDevice            1.01
+  iManufacturer           1 Philips Electronics - RCS Singapore
+  iProduct                2 Creative USB IR Receiver
+  iSerial                 0 
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength           34
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0 
+    bmAttributes         0xa0
+      (Bus Powered)
+      Remote Wakeup
+    MaxPower              100mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           1
+      bInterfaceClass         3 Human Interface Devices
+      bInterfaceSubClass      1 Boot Interface Subclass
+      bInterfaceProtocol      0 None
+      iInterface              0 
+        HID Device Descriptor:
+          bLength                 9
+          bDescriptorType        33
+          bcdHID               1.00
+          bCountryCode            0 Not supported
+          bNumDescriptors         1
+          bDescriptorType        34 Report
+          wDescriptorLength      28
+          Report Descriptor: (length is 28)
+            Item(Global): Usage Page, data= [ 0x00 0xff ] 65280
+                            (null)
+            Item(Local ): Usage, data= [ 0x00 ] 0
+                            (null)
+            Item(Main  ): Collection, data= [ 0x01 ] 1
+                            Application
+            Item(Global): Report ID, data= [ 0x03 ] 3
+            Item(Local ): Usage, data= [ 0x00 ] 0
+                            (null)
+            Item(Local ): Usage Minimum, data= [ 0x00 ] 0
+                            (null)
+            Item(Local ): Usage Maximum, data= [ 0xff 0x00 ] 255
+                            (null)
+            Item(Global): Logical Minimum, data= [ 0x00 ] 0
+            Item(Global): Logical Maximum, data= [ 0xff 0x00 ] 255
+            Item(Global): Report Size, data= [ 0x08 ] 8
+            Item(Global): Report Count, data= [ 0x05 ] 5
+            Item(Main  ): Input, data= [ 0x00 ] 0
+                            Data Array Absolute No_Wrap Linear
+                            Preferred_State No_Null_Position Non_Volatile Bitfield
+            Item(Main  ): End Collection, data=none
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            3
+          Transfer Type            Interrupt
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0008  1x 8 bytes
+        bInterval              10
+Device Status:     0x0002
+  (Bus Powered)
+  Remote Wakeup Enabled
