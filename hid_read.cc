@@ -1,4 +1,4 @@
-// $Id: hid_read.cc,v 1.3 2006/11/13 23:52:01 ecto Exp $
+// $Id: hid_read.cc,v 1.4 2006/11/14 23:30:15 ecto Exp $
 
 #include <iostream>
 #include <string>
@@ -16,67 +16,112 @@ using namespace std;
 #include <linux/types.h>
 #include <linux/hiddev.h>
 
+
+void hid_getinfo(int hid_s) {
+  hiddev_report_info h_rep;
+
+  //get all reports
+  h_rep.report_type = HID_REPORT_TYPE_INPUT;
+  h_rep.report_id = HID_REPORT_ID_FIRST;
+  while ( ioctl(hid_s, HIDIOCGREPORTINFO, &h_rep, sizeof(h_rep)) == 0 ) {
+    cout <<"report id[0x" <<h_rep.report_id <<"]: field no: 0x" <<h_rep.num_fields <<endl;
+
+    //get all fields in report
+    hiddev_field_info h_field;
+//    memset(&h_field, 0, sizeof(h_field));
+
+    h_field.report_type = HID_REPORT_TYPE_INPUT;
+    h_field.report_id = h_rep.report_id;
+    for ( __u32 i = 0; i < h_rep.num_fields; ++i ) {
+
+      h_field.field_index = i;
+      ioctl(hid_s, HIDIOCGFIELDINFO, &h_field, sizeof(h_field));
+      cout
+        <<" field[0x" <<i <<"]" <<endl
+        <<"  usage: 0x" <<h_field.maxusage <<", flags: 0x" <<h_field.flags <<endl
+        <<"  phys: 0x" <<h_field.physical <<", min: 0x" <<h_field.physical_minimum <<", max: 0x" <<h_field.physical_maximum <<endl
+        <<"  logi: 0x" <<h_field.logical <<", min: 0x" <<h_field.logical_minimum <<", max: 0x" <<h_field.logical_maximum<<endl
+        <<"  app: 0x" <<h_field.application <<", unit: 0x" <<h_field.unit <<", unit_exp: 0x" <<h_field.unit_exponent <<endl;
+
+    }
+
+    h_rep.report_id = HID_REPORT_ID_NEXT;
+  }
+}
+
+
+class rm1500_hiddev {
+  int hid_s;
+
+public:
+  rm1500_hiddev( const string &path );
+  ~rm1500_hiddev();
+  int get_key();
+};
+
+
+rm1500_hiddev::rm1500_hiddev( const string &path ) {
+  hid_s = open( path.c_str(), O_RDONLY );
+  if ( hid_s < 0 )
+    throw string("open(): ") + strerror(errno);
+
+  int flags = HIDDEV_FLAG_UREF | HIDDEV_FLAG_REPORT;
+  if ( ioctl(hid_s, HIDIOCSFLAG, &flags) )
+    throw string("ioctl(HIDIOCSFLAG): ") + strerror(errno);
+
+}
+
+rm1500_hiddev::~rm1500_hiddev() {
+  if ( hid_s >= 0 )
+    close(hid_s);
+
+}
+
+int rm1500_hiddev::get_key() {
+  ssize_t nb;
+  struct hiddev_usage_ref uref;
+
+  while ( (nb = read(hid_s, &uref, sizeof(uref))) >= 0 )
+    if ( uref.field_index == HID_FIELD_INDEX_NONE ) {
+//      uref.report_type = HID_REPORT_TYPE_INPUT;
+//      uref.report_id = 3;
+      uref.field_index = 0;
+      uref.usage_index = 3;
+      ioctl(hid_s, HIDIOCGUCODE, &uref, sizeof(uref));
+      ioctl(hid_s, HIDIOCGUSAGE, &uref, sizeof(uref));
+
+      return uref.value;
+
+    //}else { we are not interested in other stuff, as we get the proper button from
+    // actual report
+    }
+
+  if ( nb < 0 )
+    throw string("read(): ") + strerror(errno);
+
+  return -1;
+
+}
+
+
 int main() {
   cout <<"***irread test***" <<endl;
 
-  int hid_s = -1;
-
   try {
     cout <<"*start" <<endl;
-    hid_s = open( "/dev/usb/hiddev0", O_RDONLY );
-
-    if ( hid_s < 0 )
-      throw string("open(): ") + strerror(errno);
-
     cout <<hex <<setfill('0');
 
-    int flags;
-    flags = HIDDEV_FLAG_UREF | HIDDEV_FLAG_REPORT;
-    if ( ioctl(hid_s, HIDIOCSFLAG, &flags) )
-      throw string("ioctl(SET): ") + strerror(errno);
-    if ( ioctl(hid_s, HIDIOCGFLAG, &flags) < 0 )
-      throw string("ioctl(GET): ") + strerror(errno);
-    cout <<"*flags: 0x" <<flags <<endl;
-    
-    ssize_t nb;
+    rm1500_hiddev ir_reader("/dev/usb/hiddev0");
 
-    struct hiddev_usage_ref uref;
-    while ( (nb = read(hid_s, &uref, sizeof(uref))) >= 0 ) {
-
-//      if ( uref.usage_index == 0 )
-//        cout <<"+key event" <<endl;
-//      else
-//        cout <<"+ [0x" <<setw(2) <<uref.usage_index <<"]: " <<(uref.value?"up":"down") <<endl;
-
-      cout
-        <<"+got uref [" <<nb <<"]:" <<endl
-        <<"+ type[0x" <<uref.report_type <<"], id[0x" <<uref.report_id <<"]" <<endl
-        <<"+ f_idx[0x" <<uref.field_index <<"]" <<endl
-        <<"+ u_idx[0x" <<uref.usage_index <<"], u_code[0x" <<uref.usage_code <<"]" <<endl
-        <<"+ value[0x" <<uref.value <<"]" <<endl <<endl;
-
-      if ( uref.usage_index ) {
-        if ( (uref.usage_code - uref.usage_index) != 0xfeffffff )
-          cout <<"PUK!" <<endl;
-
-      }else {
-
-        if ( uref.usage_index )
-          cout <<"PUK!" <<endl;
-
-      }
+    int keycode;
+    while ( ( keycode = ir_reader.get_key() ) >= 0 ) {
+      cout <<" + got bt[" <<setw(2) <<keycode <<"]" <<endl;
     }
 
-    if ( nb < 0 )
-      throw string("read(): ") + strerror(errno);
-
-    close(hid_s);
     cout <<"+finished normaly" <<endl;
 
   }catch ( const string &ex ) {
     cout <<"!got exception: " <<ex <<endl;
-    if ( hid_s >= 0 )
-      close(hid_s);
 
     return 1;
 
@@ -89,38 +134,38 @@ int main() {
 
 /*
 
-power      0x86 0x79
-1          0xd1 0x2e
-2          0xf1 0x0e
-3          0x09 0xf6
-4          0x51 0xae
-5          0x21 0xde
-6          0x1e 0xe1
-7          0x91 0x6e
-8          0x3e
-9          0xee 0x11
-0          0x01 0xfe
-cmss       0x8e 0x71
-mute       0x76 0x89
-rec        0xce 0x31
-vol-       0x8e 0x71
-vol+       0x31 0xce
-stop-eject 0xa1 0x5e
-play-pause 0x9e 0x61
-slow       0xbe 0x41
-prev       0xfe 0x01
-next       0x5e 0xa1
-step       0x7e 0x81
-eax        0x31 0xce
-options    0x41 0xbe
-display    0x6e 0x91
-return     0x71 0x8e
-start      0x11 0xee
+power      0x86
+1          0xd1
+2          0xf1
+3          0x09
+4          0x51
+5          0x21
+6          0x1e
+7          0x91
+8          0xc1
+9          0xee
+0          0x01
+cmss       0x8e
+mute       0x76
+rec        0xce
+vol-       0xc6
+vol+       0x46
+stop-eject 0xa1
+play-pause 0x9e
+slow       0xbe
+prev       0xfe
+next       0x5e
+step       0x7e
+eax        0x31
+options    0x41
+display    0x6e
+return     0x71
+start      0x11
 cancel     0x3e
-up         0xde 0x21
-left       0xe1 0xee
-ok         0x81 0x7e
-right      0xae 0x51
-down       0xbe 0x4e
+up         0xde
+left       0xe1
+ok         0x81
+right      0xae
+down       0xb1
 
 */
