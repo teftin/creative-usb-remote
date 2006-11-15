@@ -1,8 +1,9 @@
-// $Id: hid_read.cc,v 1.4 2006/11/14 23:30:15 ecto Exp $
+// $Id: hid_read.cc,v 1.5 2006/11/15 00:03:02 ecto Exp $
 
 #include <iostream>
 #include <string>
 #include <iomanip>
+#include <map>
 using namespace std;
 
 #include <sys/types.h>
@@ -17,39 +18,6 @@ using namespace std;
 #include <linux/hiddev.h>
 
 
-void hid_getinfo(int hid_s) {
-  hiddev_report_info h_rep;
-
-  //get all reports
-  h_rep.report_type = HID_REPORT_TYPE_INPUT;
-  h_rep.report_id = HID_REPORT_ID_FIRST;
-  while ( ioctl(hid_s, HIDIOCGREPORTINFO, &h_rep, sizeof(h_rep)) == 0 ) {
-    cout <<"report id[0x" <<h_rep.report_id <<"]: field no: 0x" <<h_rep.num_fields <<endl;
-
-    //get all fields in report
-    hiddev_field_info h_field;
-//    memset(&h_field, 0, sizeof(h_field));
-
-    h_field.report_type = HID_REPORT_TYPE_INPUT;
-    h_field.report_id = h_rep.report_id;
-    for ( __u32 i = 0; i < h_rep.num_fields; ++i ) {
-
-      h_field.field_index = i;
-      ioctl(hid_s, HIDIOCGFIELDINFO, &h_field, sizeof(h_field));
-      cout
-        <<" field[0x" <<i <<"]" <<endl
-        <<"  usage: 0x" <<h_field.maxusage <<", flags: 0x" <<h_field.flags <<endl
-        <<"  phys: 0x" <<h_field.physical <<", min: 0x" <<h_field.physical_minimum <<", max: 0x" <<h_field.physical_maximum <<endl
-        <<"  logi: 0x" <<h_field.logical <<", min: 0x" <<h_field.logical_minimum <<", max: 0x" <<h_field.logical_maximum<<endl
-        <<"  app: 0x" <<h_field.application <<", unit: 0x" <<h_field.unit <<", unit_exp: 0x" <<h_field.unit_exponent <<endl;
-
-    }
-
-    h_rep.report_id = HID_REPORT_ID_NEXT;
-  }
-}
-
-
 class rm1500_hiddev {
   int hid_s;
 
@@ -57,8 +25,9 @@ public:
   rm1500_hiddev( const string &path );
   ~rm1500_hiddev();
   int get_key();
-};
+  void devinfo(ostream &ost);
 
+};
 
 rm1500_hiddev::rm1500_hiddev( const string &path ) {
   hid_s = open( path.c_str(), O_RDONLY );
@@ -103,6 +72,99 @@ int rm1500_hiddev::get_key() {
 
 }
 
+void rm1500_hiddev::devinfo(ostream &ost) {
+  hiddev_report_info h_rep;
+
+  //get all reports
+  h_rep.report_type = HID_REPORT_TYPE_INPUT;
+  h_rep.report_id = HID_REPORT_ID_FIRST;
+  while ( ioctl(hid_s, HIDIOCGREPORTINFO, &h_rep, sizeof(h_rep)) == 0 ) {
+    ost <<"report id[0x" <<h_rep.report_id <<"]: field no: 0x" <<h_rep.num_fields <<endl;
+
+    //get all fields in report
+    hiddev_field_info h_field;
+
+    h_field.report_type = HID_REPORT_TYPE_INPUT;
+    h_field.report_id = h_rep.report_id;
+    for ( __u32 i = 0; i < h_rep.num_fields; ++i ) {
+
+      h_field.field_index = i;
+      ioctl(hid_s, HIDIOCGFIELDINFO, &h_field, sizeof(h_field));
+      ost
+        <<" field[0x" <<i <<"]" <<endl
+        <<"  usage: 0x" <<h_field.maxusage <<", flags: 0x" <<h_field.flags <<endl
+        <<"  phys: 0x" <<h_field.physical <<", min: 0x" <<h_field.physical_minimum <<", max: 0x" <<h_field.physical_maximum <<endl
+        <<"  logi: 0x" <<h_field.logical <<", min: 0x" <<h_field.logical_minimum <<", max: 0x" <<h_field.logical_maximum<<endl
+        <<"  app: 0x" <<h_field.application <<", unit: 0x" <<h_field.unit <<", unit_exp: 0x" <<h_field.unit_exponent <<endl;
+
+    }
+
+    h_rep.report_id = HID_REPORT_ID_NEXT;
+  }
+
+}
+
+class kcode2label {
+  typedef map<int, string> k2l_t;
+  k2l_t k2l;
+public:
+  kcode2label();
+  inline const string &getlabel(int kc) const;
+};
+
+kcode2label::kcode2label() {
+  struct {
+    char *label;
+    int code;
+  } *kcode_p, kcode_init[] = {
+    { "power", 0x86 },
+    { "1", 0xd1 },
+    { "2", 0xf1 },
+    { "3", 0x09 },
+    { "4", 0x51 },
+    { "5", 0x21 },
+    { "6", 0x1e },
+    { "7", 0x91 },
+    { "8", 0xc1 },
+    { "9", 0xee },
+    { "0", 0x01 },
+    { "cmss", 0x8e },
+    { "mute", 0x76 },
+    { "rec", 0xce },
+    { "vol-", 0xc6 },
+    { "vol+", 0x46 },
+    { "stop-eject", 0xa1 },
+    { "play-pause", 0x9e },
+    { "slow", 0xbe },
+    { "prev", 0xfe },
+    { "next", 0x5e },
+    { "step", 0x7e },
+    { "eax", 0x31 },
+    { "options", 0x41 },
+    { "display", 0x6e },
+    { "return", 0x71 },
+    { "start", 0x11 },
+    { "cancel", 0x3e },
+    { "up", 0xde },
+    { "left", 0xe1 },
+    { "ok", 0x81 },
+    { "right", 0xae },
+    { "down", 0xb1 },
+    { NULL, 0x00 }
+  };
+
+  for ( kcode_p = kcode_init; kcode_p->label != NULL; ++kcode_p )
+    k2l[kcode_p->code] = kcode_p->label;
+}
+
+const string &kcode2label::getlabel(int kc) const {
+  k2l_t::const_iterator it = k2l.find(kc);
+  if ( it == k2l.end() )
+    throw string("cannot find keycode");
+  return it->second;
+  
+}
+
 
 int main() {
   cout <<"***irread test***" <<endl;
@@ -111,11 +173,16 @@ int main() {
     cout <<"*start" <<endl;
     cout <<hex <<setfill('0');
 
-    rm1500_hiddev ir_reader("/dev/usb/hiddev0");
+    rm1500_hiddev ir_reader("/dev/usb/rm1500");
+    ir_reader.devinfo(cout);
+
+    kcode2label k2l;
 
     int keycode;
     while ( ( keycode = ir_reader.get_key() ) >= 0 ) {
-      cout <<" + got bt[" <<setw(2) <<keycode <<"]" <<endl;
+      const string &l = k2l.getlabel(keycode);
+      cout <<" + got key(" <<setw(2) <<keycode <<"): " <<l <<endl;  
+
     }
 
     cout <<"+finished normaly" <<endl;
@@ -132,40 +199,3 @@ int main() {
 }
 
 
-/*
-
-power      0x86
-1          0xd1
-2          0xf1
-3          0x09
-4          0x51
-5          0x21
-6          0x1e
-7          0x91
-8          0xc1
-9          0xee
-0          0x01
-cmss       0x8e
-mute       0x76
-rec        0xce
-vol-       0xc6
-vol+       0x46
-stop-eject 0xa1
-play-pause 0x9e
-slow       0xbe
-prev       0xfe
-next       0x5e
-step       0x7e
-eax        0x31
-options    0x41
-display    0x6e
-return     0x71
-start      0x11
-cancel     0x3e
-up         0xde
-left       0xe1
-ok         0x81
-right      0xae
-down       0xb1
-
-*/

@@ -1,0 +1,2 @@
+KERNEL=="hiddev[0-9]*", SYSFS{idVendor}=="041e", SYSFS{idProduct}=="3100", MODE="660", GROUP="audio", SYMLINK+="usb/rm1500"
+
