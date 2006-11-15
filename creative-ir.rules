@@ -1,2 +1,3 @@
+# $Id: creative-ir.rules,v 1.2 2006/11/15 00:39:12 ecto Exp $
 KERNEL=="hiddev[0-9]*", SYSFS{idVendor}=="041e", SYSFS{idProduct}=="3100", MODE="660", GROUP="audio", SYMLINK+="usb/rm1500"
 
