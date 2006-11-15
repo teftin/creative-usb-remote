@@ -1,4 +1,7 @@
-// $Id: hid_read.cc,v 1.5 2006/11/15 00:03:02 ecto Exp $
+// $Id: hid_read.cc,v 1.6 2006/11/15 00:38:37 ecto Exp $
+
+//written by Stan Sawa teftin(at)gmail.com
+//take it and share ...
 
 #include <iostream>
 #include <string>
@@ -197,5 +200,3 @@ int main() {
   return 0;
 
 }
-
-

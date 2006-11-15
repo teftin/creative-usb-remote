@@ -19,4 +19,4 @@ else:
 
 Help(opts.GenerateHelpText(env))
 
-env.Program( target = 'ir_read', source = [ 'hid_read.cc' ] )
+env.Program( target = 'hid_read', source = [ 'hid_read.cc' ] )
