@@ -1,3 +1,5 @@
+# $Id: SConstruct,v 1.4 2006/11/15 00:38:56 ecto Exp $
+
 opts = Options()
 opts.AddOptions(
   BoolOption('debug', 'debug output and symbols', 1),
