@@ -1,11 +1,12 @@
 #!/usr/bin/perl
 
-# $Id: event_dispatcher.pl,v 1.2 2006/12/08 23:14:40 ecto Exp $
+# $Id: event_dispatcher.pl,v 1.3 2006/12/09 00:32:41 ecto Exp $
 
 use strict;
 use warnings;
 
 use IO::Handle;
+use IO::Socket::UNIX;
 use POSIX;
 use Xmms::Remote;
 
@@ -29,9 +30,17 @@ sub mplayer_cmd($) {
     syswrite $mp_fifo, $_[0]."\n"
 }
 
+sub gqview_cmd($) {
+    my $gq_s = new IO::Socket::UNIX( Type => SOCK_STREAM, Peer => "/home/ecto/.gqview/.command");
+    print "(cannot connect)" and return unless defined $gq_s and $gq_s->connected;
+    $gq_s->write($_[0]."\n");
+    $gq_s->close;
+}
+
 my %ev_glob = (
     "1" => sub { print "MODE[xmms]"; $mode = "xmms" },
     "2" => sub { print "MODE[mplayer]"; $mode = "mplayer" },
+    "3" => sub { print "MODE[gqview]"; $mode = "gqview" },
 );
 
 my %ev_mode = (
@@ -57,6 +66,11 @@ my %ev_mode = (
 	    "down" => sub { mplayer_cmd("seek -30") },
 	    "up" => sub { mplayer_cmd("seek 30") },
 	    "power" => sub { mplayer_cmd("quit") },
+    },
+    "gqview" => {
+        "display" => sub { gqview_cmd("--fullscreen") },
+        "prev" => sub { gqview_cmd("--back") },
+        "next" => sub { gqview_cmd("--next") },
     },
 );
 
