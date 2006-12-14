@@ -1,4 +1,4 @@
-# $Id: SConstruct,v 1.4 2006/11/15 00:38:56 ecto Exp $
+# $Id: SConstruct,v 1.5 2006/12/14 23:13:20 ecto Exp $
 
 opts = Options()
 opts.AddOptions(
@@ -8,7 +8,7 @@ opts.AddOptions(
 env = Environment(
   CPPPATH = ['/usr/local/include' ],
   CPPDEFINES = [ '_REENTRANT' ],
-  CPPFLAGS = [ '-Wall', '-Werror', '-pipe' ],
+  CPPFLAGS = [ '-Wall', '-Wextra', '-Werror', '-pipe' ],
   CXXFLAGS = [ '-fmessage-length=0', '-fvisibility-inlines-hidden', '-fvisibility=hidden' ],
   LIBS = [],
   options = opts,
