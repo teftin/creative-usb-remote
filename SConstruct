@@ -1,23 +1,24 @@
-# $Id: SConstruct,v 1.5 2006/12/14 23:13:20 ecto Exp $
+# $Id: SConstruct,v 1.6 2007/01/25 21:25:54 ecto Exp $
 
 opts = Options()
 opts.AddOptions(
-  BoolOption('debug', 'debug output and symbols', 1),
+	BoolOption('debug', 'debug output and symbols', 1),
 )
 
 env = Environment(
-  CPPPATH = ['/usr/local/include' ],
-  CPPDEFINES = [ '_REENTRANT' ],
-  CPPFLAGS = [ '-Wall', '-Wextra', '-Werror', '-pipe' ],
-  CXXFLAGS = [ '-fmessage-length=0', '-fvisibility-inlines-hidden', '-fvisibility=hidden' ],
-  LIBS = [],
-  options = opts,
+#	CXX = 'g++-4.2',
+	CPPPATH = ['/usr/local/include' ],
+	CPPDEFINES = [ '_REENTRANT' ],
+	CPPFLAGS = [ '-Wall', '-Wextra', '-Werror', '-pipe' ],
+	CXXFLAGS = [ '-fmessage-length=0', '-fvisibility-inlines-hidden', '-fvisibility=hidden' ],
+	LIBS = [],
+	options = opts,
 )
 
 if env['debug']:
-  env.Append( CXXFLAGS = [ '-ggdb', '-O0' ], )
+	env.Append( CXXFLAGS = [ '-ggdb', '-O0' ], )
 else:
-  env.Append( CXXFLAGS = [ '-O2' ], )
+	env.Append( CXXFLAGS = [ '-O2' ], )
 
 Help(opts.GenerateHelpText(env))
 
