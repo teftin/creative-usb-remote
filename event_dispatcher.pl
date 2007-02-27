@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: event_dispatcher.pl,v 1.3 2006/12/09 00:32:41 ecto Exp $
+# $Id: event_dispatcher.pl,v 1.4 2007/02/27 20:01:50 ecto Exp $
 
 use strict;
 use warnings;
@@ -8,7 +8,8 @@ use warnings;
 use IO::Handle;
 use IO::Socket::UNIX;
 use POSIX;
-use Xmms::Remote;
+#use Xmms::Remote;
+#use DCOP::Amarok;
 
 $| = 1;
 
@@ -20,7 +21,16 @@ $SIG{PIPE} = sub {
 
 my $mode = "nil";
 
-my $xmms_remote = new Xmms::Remote;
+#my $xmms_remote = new Xmms::Remote;
+#my $amarok_remote = new DCOP;
+
+#this requires something like that:
+# input=file=/home/ecto/.mplayer/input.fifo
+#in your mplayer config
+
+sub amarok_cmd($) {
+    system("/usr/bin/dcop", "amarok", "player", $_[0]);
+}
 
 sub mplayer_cmd($) {
     our $mp_fifo;
@@ -38,21 +48,21 @@ sub gqview_cmd($) {
 }
 
 my %ev_glob = (
-    "1" => sub { print "MODE[xmms]"; $mode = "xmms" },
+    "1" => sub { print "MODE[amarok]"; $mode = "amarok" },
     "2" => sub { print "MODE[mplayer]"; $mode = "mplayer" },
     "3" => sub { print "MODE[gqview]"; $mode = "gqview" },
 );
 
 my %ev_mode = (
-    "xmms" => {
-	    "mute" => sub { $xmms_remote->set_main_volume(0) },
-	    "vol-" => sub { $xmms_remote->set_main_volume($xmms_remote->get_main_volume - 5) },
-	    "vol+" => sub { $xmms_remote->set_main_volume($xmms_remote->get_main_volume + 5) },
-	    "stop-eject" => sub { $xmms_remote->stop },
-	    "play-pause" => sub { $xmms_remote->play_pause },
-	    "prev" => sub { $xmms_remote->playlist_prev },
-	    "next" => sub { $xmms_remote->playlist_next },
-	    "options" => sub { $xmms_remote->toggle_shuffle },
+    "amarok" => {
+	    "mute" => sub { amarok_cmd("mute") },
+	    "vol-" => sub { amarok_cmd("volumeDown") },
+	    "vol+" => sub { amarok_cmd("volumeUp") },
+	    "stop-eject" => sub { amarok_cmd("stop") },
+	    "play-pause" => sub { amarok_cmd("playPause") },
+	    "prev" => sub { amarok_cmd("prev") },
+	    "next" => sub { amarok_cmd("next") },
+#	    "options" => sub { amarok_cmd("") },
     },
     "mplayer" => {
 	    "play-pause" => sub { mplayer_cmd("pause") },
@@ -74,7 +84,7 @@ my %ev_mode = (
     },
 );
 
-open EVENT, './hid_read|';
+open EVENT, '/home/ecto/run/hid_read|';
 
 while ( <EVENT> ) {
 	print and next unless /^ \+ got key\(..\): (.*)$/;

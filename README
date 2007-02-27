@@ -1,4 +1,4 @@
--- $Id: README,v 1.4 2006/11/15 08:51:30 ecto Exp $
+-- $Id: README,v 1.5 2007/02/27 20:01:50 ecto Exp $
 
 This small set of utils allowing to use this:
 ID 041e:3100 Creative Technology, Ltd [Philips Electronics - RCS Singapore Creative USB IR Receiver]
@@ -38,3 +38,12 @@ for event_dispatcher.pl: Xmms perl modules
 
 ps. if you don't like this project, write a better one ...
 
+
+
+changelog
+
+2x-02-2007:
+s/xmms/amarok/
+
+xx-01-2007:
+added mode support, other modes for mplayer, gqview
