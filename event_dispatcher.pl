@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# $Id: event_dispatcher.pl,v 1.4 2007/02/27 20:01:50 ecto Exp $
+# $Id: event_dispatcher.pl,v 1.5 2007/08/02 21:08:33 ecto Exp $
 
 use strict;
 use warnings;
@@ -28,8 +28,10 @@ my $mode = "nil";
 # input=file=/home/ecto/.mplayer/input.fifo
 #in your mplayer config
 
+$ENV{DISPLAY} = ':0' unless exists $ENV{DISPLAY};
+
 sub amarok_cmd($) {
-    system("/usr/bin/dcop", "amarok", "player", $_[0]);
+    system("/usr/bin/dcop", "amarok", "player", $_[0] );
 }
 
 sub mplayer_cmd($) {
